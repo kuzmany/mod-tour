@@ -1,0 +1,11 @@
+{
+  "name": "mod-tour",
+  "version": "0.2.0",
+  "description": "/mod-tour: a live, clickable tour of everything a Claude Code mod can do, in 22 slides",
+  "author": { "name": "Zdeno Kuzmany", "url": "https://github.com/kuzmany" },
+  "homepage": "https://github.com/kuzmany/mod-tour",
+  "repository": "https://github.com/kuzmany/mod-tour",
+  "license": "MIT",
+  "keywords": ["mod", "demo", "tour", "hooks", "tutorial"],
+  "types": "./types/index.d.ts"
+}

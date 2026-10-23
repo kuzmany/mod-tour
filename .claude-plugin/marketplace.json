@@ -1,0 +1,17 @@
+{
+  "name": "mod-tour",
+  "owner": {
+    "name": "Zdeno Kuzmany",
+    "url": "https://github.com/kuzmany"
+  },
+  "plugins": [
+    {
+      "name": "mod-tour",
+      "source": "./",
+      "description": "A live, clickable tour of everything a Claude Code mod can do"
+    }
+  ],
+  "metadata": {
+    "description": "A live, clickable tour of everything a Claude Code mod can do"
+  }
+}
