@@ -2,6 +2,8 @@
 
 **See what a Claude Code mod can do. Live, inside Claude Code, in 2 minutes.**
 
+![mod-tour in a clean Claude Code session: stepping through slides, a toast, the status line, a band above the prompt, and a real question box](assets/demo.gif)
+
 Docs tell you a mod can draw a pane, guard a tool call or rewrite your prompt. `/mod-tour` shows you. It opens a pane with 22 slides. Each slide runs a real example in your session, next to the few lines of API that make it work.
 
 ## Install
