@@ -30,7 +30,7 @@ const SLIDES: Slide[] = [
   // Models and tools
   { title: 'Ask a model', api: "$.model.complete({ model: 'haiku', prompt })", text: 'A side call to any model, no turn, no history.', act: 'model' },
   { title: 'Side question over this session', api: '$.model.fork({ prompt })', text: 'Asks about the session itself, served from the prompt cache. Example: what is still open?', act: 'fork' },
-  { title: 'Call a tool', api: "$.tool.call({ tool: 'mcp__mod-tour__clock' })", text: 'A mod can call any tool and add its own ($.tool.register). Example: this mod’s own clock tool, also callable by Claude.', act: 'tool' },
+  { title: 'Call a tool', api: "$.tool.call({ tool: 'Bash', command: 'date' })", text: 'A mod can call any tool, and add its own with $.tool.register: this mod adds a clock tool that Claude can call (ask “what time is it?”). Example: run Bash from code.', act: 'tool' },
   { title: 'Run a slash command', api: "$.command.run({ command: 'tour-ping' })", text: 'Commands a mod adds answer at once, even mid-turn. Example: run this mod’s /tour-ping from here.', act: 'command' },
   // Stepping into Claude’s work
   { title: 'Hold a tool call and ask', api: "on('tool.call') + $.ui.ask(question, options)", text: 'A guard can pause a call and ask you. [Try it] opens the real question box; nothing runs.', act: 'ask' },
@@ -49,7 +49,7 @@ async function act($: EngineInterface, name: string, surface: string): Promise<s
     case 'log': {
       const run = await $.process.run(['git', 'status', '--porcelain'])
       const changed = run.exitCode === 0 ? run.stdout.split('\n').filter(Boolean).length : -1
-      $.ui.log(changed < 0 ? 'mod-tour: this folder is not a git repository' : `mod-tour: ${changed} file(s) changed in git`)
+      $.ui.log(changed < 0 ? 'this folder is not a git repository' : `${changed} file(s) changed in git`)
       return 'look at the chat history'
     }
     case 'toast':
@@ -58,7 +58,7 @@ async function act($: EngineInterface, name: string, surface: string): Promise<s
     case 'status': {
       const { context, cost } = await $.session.usage()
       const text = `ctx ${context.percent ?? '?'}% of ${Math.round(context.window / 1000)}k${cost ? ` · $${cost.usd.toFixed(2)}` : ''}`
-      $.ui.status(`mod-tour: ${text}`)
+      $.ui.status(text)
       return `${text}, look at the status line`
     }
     case 'notify': {
@@ -100,8 +100,8 @@ async function act($: EngineInterface, name: string, surface: string): Promise<s
       return r.isAnswered ? r.text.trim() : `no answer: ${r.reason}`
     }
     case 'tool': {
-      const ran = await $.tool.call({ tool: 'mcp__mod-tour__clock' } as never)
-      return ran.deny !== undefined ? `denied: ${ran.deny}` : String(ran.text ?? JSON.stringify(ran.result))
+      const ran = await $.tool.call({ tool: 'Bash', command: 'date' })
+      return ran.deny !== undefined ? `denied: ${ran.deny}` : String(ran.text ?? JSON.stringify(ran.result)).slice(0, 200)
     }
     case 'command': {
       const { text } = await $.command.run({ command: 'tour-ping' })
@@ -195,12 +195,7 @@ export const register: Register = on => {
     return { text: isAuto ? 'Tour playing: a slide every 3 s.' : 'Tour opened: p/n to step, t to try, s to play.' }
   })
 
-  on('command.run', { command: 'tour-ping' }, async $ => ({ text: `pong from mod-tour at ${new Date(await $.clock.now()).toLocaleTimeString()}` }))
-
-  on('tool.call', { tool: /^mcp__mod-tour__clock$/ }, async $ => {
-    const now = new Date(await $.clock.now())
-    return { result: `utc:   ${now.toISOString()}\nlocal: ${now.toString()}` }
-  })
+  on('command.run', { command: 'tour-ping' }, async ($, e) => ({ text: `pong from mod-tour at ${new Date(await $.clock.now()).toLocaleTimeString()} ${e.args}`.trim() }))
 
   on('ui.close', { id: PANE }, async ($, e, next) => {
     await update($, tour, t => ({ ...t, isOpen: false }))
@@ -218,8 +213,13 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('tool.call', ($, e, next) => {
+  // Also answers the clock tool when Claude calls it (its name is not in the tool types until the mod has loaded once).
+  on('tool.call', async ($, e, next) => {
     tools += 1
+    if ((e.tool as string) === 'mcp__mod-tour__clock') {
+      const now = new Date(await $.clock.now())
+      return { result: `utc:   ${now.toISOString()}\nlocal: ${now.toString()}` }
+    }
     return next(e)
   })
 

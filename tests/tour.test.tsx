@@ -44,3 +44,9 @@ test('::tour is rewritten before the model reads it', async ($, on) => {
   const out = await $.prompt.submit({ text: '::tour', wait: false, origin: { kind: 'composer' } })
   expect(out.text).toContain('prompt.submit hook')
 })
+
+test('the clock tool answers when Claude calls it', async ($, on) => {
+  engine(on)
+  const ran = await $.tool.call({ tool: 'mcp__mod-tour__clock' } as never)
+  expect(JSON.stringify(ran.result)).toContain('utc:')
+})
