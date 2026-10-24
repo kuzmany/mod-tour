@@ -31,7 +31,7 @@ const SLIDES: Slide[] = [
   { title: 'Ask a model', api: "$.model.complete({ model: 'haiku', prompt })", text: 'A side call to any model, no turn, no history.', act: 'model' },
   { title: 'Side question over this session', api: '$.model.fork({ prompt })', text: 'Asks about the session itself, served from the prompt cache. Example: what is still open?', act: 'fork' },
   { title: 'Call a tool', api: "$.tool.call({ tool: 'Bash', command: 'date' })", text: 'A mod can call any tool, and add its own with $.tool.register: this mod adds a clock tool that Claude can call (ask “what time is it?”). Example: run Bash from code.', act: 'tool' },
-  { title: 'Run a slash command', api: "$.command.run({ command: 'tour-ping' })", text: 'Commands a mod adds answer at once, even mid-turn. Example: run this mod’s /tour-ping from here.', act: 'command' },
+  { title: 'Add a slash command', api: "$.command.register + on('command.run', { command })", text: 'This mod adds /tour-ping. It answers at once, even while Claude works. [Try it] puts it in your prompt box: press Esc, then Enter.', act: 'command' },
   // Stepping into Claude’s work
   { title: 'Hold a tool call and ask', api: "on('tool.call') + $.ui.ask(question, options)", text: 'A guard can pause a call and ask you. [Try it] opens the real question box; nothing runs.', act: 'ask' },
   { title: 'Rewrite a prompt', api: "on('prompt.submit', … next({ ...e, text }))", text: 'This mod turns ::tour into a full question. [Try it] puts ::tour in your prompt box: press Enter.', act: 'fill' },
@@ -104,8 +104,8 @@ async function act($: EngineInterface, name: string, surface: string): Promise<s
       return ran.deny !== undefined ? `denied: ${ran.deny}` : String(ran.text ?? JSON.stringify(ran.result)).slice(0, 200)
     }
     case 'command': {
-      const { text } = await $.command.run({ command: 'tour-ping' })
-      return text === undefined ? 'no output' : text.split('\n').slice(0, 4).join('\n')
+      await $.prompt.fill({ text: '/tour-ping', mode: 'replace' })
+      return 'press Esc to leave the pane, then Enter'
     }
     case 'ask': {
       const answer = await $.ui.ask('Claude wants to run `rm -rf /tmp/demo`. Run it?', { header: 'mod-tour', options: ['Run it', 'Cancel'] })
@@ -132,11 +132,11 @@ async function act($: EngineInterface, name: string, surface: string): Promise<s
 }
 
 // Free, quiet examples run as soon as you step to them; the rest wait for [Try it].
-const AUTO = new Set(['log', 'toast', 'status', 'band', 'process', 'fs', 'store', 'turn', 'compose', 'tool', 'command'])
+const AUTO = new Set(['log', 'toast', 'status', 'band', 'process', 'fs', 'store', 'turn', 'compose', 'tool'])
 const WHY: Record<string, string> = {
   model: 'costs a Haiku call', fork: 'costs a model call',
   ask: 'opens a dialog', copy: 'overwrites clipboard', notify: 'sends a notification',
-  fill: 'changes your prompt', suggest: 'changes your prompt', spinner: 'toggle',
+  fill: 'changes your prompt', command: 'changes your prompt', suggest: 'changes your prompt', spinner: 'toggle',
 }
 
 async function show($: EngineInterface, slide: number, surface?: string) {

@@ -31,7 +31,7 @@ Slides that cost tokens or interrupt you (model calls, dialogs, clipboard, notif
 - **Tell you something:** transcript line, toast, status line, system notification
 - **Draw:** a band above the prompt, a pane with an input field, a restyled spinner
 - **Reach out:** run `git`, read files, remember values across sessions, copy to clipboard
-- **Models and tools:** a Haiku side call, a fork that asks about this session, a tool the mod adds and calls, a slash command run from code
+- **Models and tools:** a Haiku side call, a fork that asks about this session, a tool Claude can call, a slash command, any tool called from code
 - **Step into Claude's work:** pause a tool call and ask you, rewrite a prompt (`::tour`), suggest the next prompt, edit the system prompt, follow a turn
 
 Everything lives in one file: `hooks/register.tsx`. Read it and copy the parts you need.
